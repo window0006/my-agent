@@ -1,13 +1,14 @@
 # MyAgent — AGENTS.md
 
 > **Inherits from**:
-> - [`~/.agents/SOUL.md`](file:///Users/windowyang/.agents/SOUL.md) — full
->   development philosophy (9 principles, two-checkpoint workflow, break clause)
+> - [`.agents/SOUL.md`](./.agents/SOUL.md) — full development philosophy
+>   (9 principles, two-checkpoint workflow, break clause). This is the
+>   project's own charter; clone the repo and you ship with it.
 > - [`~/.agents/AGENTS.md`](file:///Users/windowyang/.agents/AGENTS.md) —
->   operational guide and project AGENTS.md contract
+>   operational guide and project AGENTS.md contract (global template).
 >
 > Read both before any non-trivial task. This file only adds
-> project-specific context; the principles live in SOUL.md.
+> project-specific context; the principles live in `.agents/SOUL.md`.
 
 ---
 
