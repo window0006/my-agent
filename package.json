@@ -4,11 +4,15 @@
   "private": true,
   "description": "Personal Agent project — Base Agent core, server, web, sandbox",
   "scripts": {
-    "build": "pnpm -r build",
+    "build": "pnpm -r build && pnpm bundle:server",
     "dev": "pnpm -r --parallel dev",
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
+    "bundle:server": "node tools/build-bundle.cjs",
     "clean": "pnpm -r exec rm -rf dist node_modules"
+  },
+  "devDependencies": {
+    "esbuild": "^0.21.3"
   },
   "engines": {
     "node": ">=20.0.0",

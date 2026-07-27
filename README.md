@@ -25,7 +25,9 @@ MyAgent/
 │   ├── web/            # 前端聊天界面（Vite + React + AntD + AntV）
 │   ├── sandbox/        # 沙箱执行模块（白名单 shell + 1MB 输出截断）
 │   └── shared/         # 共享类型（LangChain 1.2 v1 ContentBlock 协议）
-├── tools/              # 工具脚本
+├── tools/
+│   ├── build-bundle.cjs  # esbuild 单文件打包（解决 pnpm+macOS 冷启慢）
+│   └── integration-test.ts  # 端到端集成测试（bypass server bootstrap）
 ├── .env.example        # 环境变量示例
 ├── pnpm-workspace.yaml # monorepo 配置
 ├── docker-compose.yml  # 一键起 MySQL
@@ -56,12 +58,16 @@ docker compose up -d
 cp .env.example packages/server/.env.development
 # 编辑 packages/server/.env.development 填入你的 LLM_PROVIDER / API Key
 
-# 4. 启动后端
+# 4. 构建后端（esbuild 单文件打包，5 秒冷启）
+pnpm build
+# 输出: packages/server/dist/bundle.cjs
+
+# 5. 启动后端
 cd packages/server
 node --env-file=.env.development dist/bundle.cjs
 # → http://localhost:3000/api/health
 
-# 5. 启动前端
+# 6. 启动前端
 cd packages/web
 pnpm dev
 # → http://localhost:5173
