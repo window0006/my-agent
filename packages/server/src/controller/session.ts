@@ -5,7 +5,7 @@ import type { Context } from 'koa';
 import { ResponseUtil, RetCode } from '@my-agent/shared';
 import { ValidationError } from '../common/consts/errors';
 import { sessionService } from '../service/session';
-import { DEFAULT_USER } from '../repository/dao/session';
+import { getUserId } from '../common/auth';
 import { logger } from '../common/utils/logger';
 
 class SessionController {
@@ -117,10 +117,5 @@ class SessionController {
  * Extract userId from the request. v1: stub from header or default.
  * v4 (auth): replaced with JWT-decoded user.
  */
-function getUserId(ctx: Context): string {
-  const headerId = ctx.headers['x-user-id'];
-  if (typeof headerId === 'string' && headerId.length > 0) return headerId;
-  return DEFAULT_USER;
-}
 
 export const sessionController = new SessionController();

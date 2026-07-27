@@ -5,7 +5,7 @@ import type { Context } from 'koa';
 import { ResponseUtil, RetCode } from '@my-agent/shared';
 import { ValidationError } from '../common/consts/errors';
 import { memoryService } from '../service/memory';
-import { DEFAULT_USER } from '../repository/dao/session';
+import { getUserId } from '../common/auth';
 
 class MemoryController {
   async list(ctx: Context) {
@@ -45,12 +45,6 @@ class MemoryController {
     const summaries = await memoryService.listSummaries(sessionId);
     ctx.body = ResponseUtil.success(summaries);
   }
-}
-
-function getUserId(ctx: Context): string {
-  const headerId = ctx.headers['x-user-id'];
-  if (typeof headerId === 'string' && headerId.length > 0) return headerId;
-  return DEFAULT_USER;
 }
 
 export const memoryController = new MemoryController();
