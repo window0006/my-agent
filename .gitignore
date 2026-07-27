@@ -1,0 +1,62 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+build/
+*.tsbuildinfo
+vite.config.ts.timestamp-*.mjs
+
+# Environment — never commit credentials
+.env
+.env.local
+.env.*.local
+.env.development
+.env.production
+.env.test
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+isolate-*.log
+
+# IDE
+.vscode/
+!.vscode/settings.json
+!.vscode/extensions.json
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Coverage
+coverage/
+.nyc_output/
+
+# Cache
+.cache/
+.turbo/
+.next/
+.nuxt/
+
+# Runtime
+.runtime/
+sandbox-workdir/
+
+# Temp / debug scaffolding (re-generate as needed)
+.inject-*.mjs
+packages/core-agent/test-*.js
+packages/server/bundle.cjs
+packages/server/inject-*.mjs
+packages/web/dist/
+tmp/
+/tmp/
+
+# OS
+Thumbs.db

@@ -1,0 +1,35 @@
+/**
+ * Business return codes.
+ * Reference: https://github.com/window0006/node-server
+ */
+export enum RetCode {
+  SUCCESS = 0,
+
+  // 通用错误 (1-99)
+  UNKNOWN_ERROR = 1,
+  VALIDATION_ERROR = 2,
+
+  // 认证相关 (100-199)
+  UNAUTHORIZED = 100,
+  TOKEN_EXPIRED = 101,
+  INVALID_TOKEN = 102,
+
+  // 权限相关 (200-299)
+  PERMISSION_DENIED = 200,
+
+  // 资源相关 (300-399)
+  RESOURCE_NOT_FOUND = 300,
+  RESOURCE_ALREADY_EXISTS = 301,
+
+  // 服务端错误 (500-599)
+  INTERNAL_SERVER_ERROR = 500,
+  DATABASE_ERROR = 501,
+  REMOTE_SERVICE_ERROR = 502,
+
+  // Agent 业务错误 (600-699)
+  AGENT_LOOP_TIMEOUT = 600,
+  AGENT_TOOL_NOT_FOUND = 601,
+  AGENT_TOOL_EXECUTION_FAILED = 602,
+  AGENT_LLM_ERROR = 603,
+  AGENT_CONTEXT_OVERFLOW = 604,
+}

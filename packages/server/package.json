@@ -1,0 +1,43 @@
+{
+  "name": "@my-agent/server",
+  "version": "0.1.0",
+  "private": true,
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "dev": "nodemon",
+    "start": "node dist/index.js",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "lint": "echo 'lint placeholder'",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:studio": "drizzle-kit studio"
+  },
+  "dependencies": {
+    "@koa/router": "^13.0.0",
+    "@langchain/core": "^1.2.0",
+    "@my-agent/core-agent": "workspace:*",
+    "@my-agent/sandbox": "workspace:*",
+    "@my-agent/shared": "workspace:*",
+    "dotenv": "^16.4.0",
+    "drizzle-orm": "^0.45.2",
+    "koa": "^2.15.0",
+    "koa-bodyparser": "^4.4.0",
+    "koa-helmet": "^7.0.0",
+    "koa-logger": "^3.2.1",
+    "mysql2": "^3.22.5",
+    "uuid": "^10.0.0",
+    "zod": "^4.4.0"
+  },
+  "devDependencies": {
+    "@types/koa": "^2.15.0",
+    "@types/koa-bodyparser": "^4.3.0",
+    "@types/koa-logger": "^3.1.0",
+    "@types/koa__router": "^12.0.0",
+    "@types/node": "^22.0.0",
+    "@types/uuid": "^10.0.0",
+    "nodemon": "^3.1.0",
+    "typescript": "^5.6.0"
+  }
+}

@@ -1,0 +1,36 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "commonjs",
+    "lib": ["ES2022"],
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "noImplicitAny": true,
+    "strictNullChecks": true,
+    "strictFunctionTypes": true,
+    "noUnusedLocals": false,
+    "noUnusedParameters": false,
+    "noFallthroughCasesInSwitch": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "declaration": true,
+    "declarationMap": true,
+    "sourceMap": true,
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "baseUrl": ".",
+    "paths": {
+      "@my-agent/shared": ["packages/shared/src"],
+      "@my-agent/shared/*": ["packages/shared/src/*"],
+      "@my-agent/core-agent": ["packages/core-agent/src"],
+      "@my-agent/core-agent/*": ["packages/core-agent/src/*"],
+      "@my-agent/server": ["packages/server/src"],
+      "@my-agent/server/*": ["packages/server/src/*"],
+      "@my-agent/sandbox": ["packages/sandbox/src"],
+      "@my-agent/sandbox/*": ["packages/sandbox/src/*"]
+    }
+  },
+  "exclude": ["node_modules", "dist", "**/dist"]
+}

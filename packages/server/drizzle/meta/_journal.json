@@ -1,0 +1,20 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1783272304906,
+      "tag": "0000_wakeful_betty_ross",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1784299156472,
+      "tag": "0001_v2_content_blocks",
+      "breakpoints": true
+    }
+  ]
+}

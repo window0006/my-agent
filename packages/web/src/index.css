@@ -1,0 +1,386 @@
+html,
+body,
+#root {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  background: #f6f8fb;
+  color: #0f172a;
+  font-size: 14px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+/* AntD overrides for a flatter, more compact look */
+.ant-layout {
+  background: #f6f8fb !important;
+}
+
+/* Slim scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* ---------- Layout grid (PC) ---------- */
+.app-grid {
+  display: grid !important;
+  grid-template-columns: 280px 1fr 320px;
+  height: calc(100vh - 56px);
+  background: #f6f8fb !important;
+}
+.sidebar-pane {
+  border-right: 1px solid #e2e8f0;
+  background: #ffffff;
+  height: 100%;
+  min-height: 0;
+}
+.control-pane {
+  border-left: 1px solid #e2e8f0;
+  background: #ffffff;
+  height: 100%;
+  min-height: 0;
+}
+.chat-pane {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  background: #f6f8fb;
+}
+.chat-scroll {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ---------- Message row + bubble ---------- */
+.message-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-bottom: 20px;
+  min-width: 0;
+  max-width: 100%;
+}
+.message-row.user {
+  justify-content: flex-end;
+}
+.message-row.assistant {
+  justify-content: flex-start;
+}
+.message-avatar {
+  flex-shrink: 0;
+  background: #3b82f6;
+}
+.message-row.user .message-avatar {
+  background: #94a3b8;
+}
+
+/* The content column: avatar + bubble layout.
+   - max-width caps long text
+   - min-width: 0 prevents flex child from being crushed by intrinsic width */
+.message-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: min(75%, 680px);
+  min-width: 0;
+  flex-shrink: 1;
+  overflow: hidden;
+}
+.message-row.user .message-content {
+  align-items: flex-end;
+}
+.message-row.assistant .message-content {
+  align-items: flex-start;
+}
+
+/* Bubble width: shrink-to-fit content, capped by parent */
+.message-bubble {
+  width: fit-content;
+  max-width: 100%;
+  padding: 11px 16px;
+  border-radius: 14px;
+  line-height: 1.55;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+/* Lock width during streaming to prevent reflow jitter as chunks arrive. */
+.message-bubble--streaming,
+.embedded-card--streaming {
+  width: 100%;
+}
+.message-row.user .message-bubble {
+  background: #3b82f6;
+  color: #ffffff;
+  border-bottom-right-radius: 4px;
+}
+.message-row.assistant .message-bubble {
+  background: #ffffff;
+  color: #0f172a;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  border-bottom-left-radius: 4px;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+}
+
+/* Cursor blink for streaming tail */
+.cursor-blink::after {
+  content: '▍';
+  margin-left: 2px;
+  animation: blink 1s steps(2) infinite;
+  color: #94a3b8;
+}
+@keyframes blink {
+  50% { opacity: 0; }
+}
+
+/* ---------- Markdown body (rendered via react-markdown) ---------- */
+.markdown-body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: inherit;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  max-width: 100%;
+  min-width: 0;
+}
+.markdown-body > *:first-child { margin-top: 0; }
+.markdown-body > *:last-child { margin-bottom: 0; }
+.markdown-body p { margin: 6px 0; }
+.markdown-body h1,
+.markdown-body h2,
+.markdown-body h3,
+.markdown-body h4 {
+  margin: 14px 0 6px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.markdown-body h1 { font-size: 19px; }
+.markdown-body h2 { font-size: 17px; }
+.markdown-body h3 { font-size: 15px; }
+.markdown-body h4 { font-size: 14px; }
+.markdown-body ul,
+.markdown-body ol {
+  margin: 6px 0;
+  padding-left: 22px;
+}
+.markdown-body li { margin: 2px 0; }
+.markdown-body li > p { margin: 2px 0; }
+.markdown-body blockquote {
+  margin: 6px 0;
+  padding: 4px 12px;
+  border-left: 3px solid #cbd5e1;
+  color: #475569;
+  background: #f8fafc;
+  border-radius: 0 6px 6px 0;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+}
+.markdown-body hr {
+  margin: 12px 0;
+  border: none;
+  border-top: 1px solid #e2e8f0;
+}
+.markdown-body a {
+  color: #2563eb;
+  text-decoration: none;
+  border-bottom: 1px solid rgba(37, 99, 235, 0.3);
+}
+.markdown-body a:hover { border-bottom-color: #2563eb; }
+.markdown-body strong { font-weight: 600; }
+.markdown-body em { font-style: italic; }
+.markdown-body del { color: #94a3b8; }
+
+/* Inline code (only direct <code>, not inside <pre>) */
+.markdown-body :not(pre) > code {
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: 0.88em;
+  background: rgba(15, 23, 42, 0.06);
+  padding: 1px 5px;
+  border-radius: 4px;
+  color: #be185d;
+  word-break: break-word;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+/* Code block — preserve whitespace, horizontal scroll on overflow */
+.markdown-body pre {
+  margin: 8px 0;
+  padding: 12px 14px;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  overflow-x: auto;
+  font-size: 13px;
+  line-height: 1.5;
+  max-width: 100%;
+  box-sizing: border-box;
+  white-space: pre;
+}
+.markdown-body pre code {
+  background: transparent;
+  padding: 0;
+  color: #0f172a;
+  font-size: inherit;
+  white-space: pre;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+
+/* Tables (GFM) */
+.markdown-body table {
+  border-collapse: collapse;
+  margin: 8px 0;
+  width: 100%;
+  font-size: 13px;
+}
+.markdown-body th,
+.markdown-body td {
+  border: 1px solid #e2e8f0;
+  padding: 6px 10px;
+  text-align: left;
+}
+.markdown-body th {
+  background: #f8fafc;
+  font-weight: 600;
+}
+.markdown-body tr:nth-child(even) td {
+  background: #fafbfc;
+}
+
+/* Task list (GFM) */
+.markdown-body input[type='checkbox'] {
+  margin-right: 6px;
+  vertical-align: middle;
+}
+
+/* Embedded cards (thinking / tool call / handoff) */
+.embedded-card {
+  margin: 4px 0;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #ffffff;
+  padding: 12px 14px;
+  width: fit-content;
+  max-width: 100%;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+.embedded-card-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #475569;
+}
+.embedded-card-body {
+  margin-top: 8px;
+  font-size: 13px;
+  color: #64748b;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+/* Files changed tag row */
+.files-changed {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+/* Input area */
+.input-shell {
+  background: transparent;
+  padding: 12px 20px 18px;
+}
+.input-wrap {
+  max-width: 920px;
+  margin: 0 auto;
+}
+.input-card {
+  border: 1px solid #cbd5e1;
+  border-radius: 18px;
+  padding: 14px 14px 14px 18px;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  background: #ffffff;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+}
+.input-card:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12), 0 2px 8px rgba(15, 23, 42, 0.06);
+}
+.input-card textarea {
+  border: none !important;
+  box-shadow: none !important;
+  resize: none;
+  flex: 1;
+  padding: 6px 0;
+  font-size: 15px;
+  line-height: 1.6;
+  min-height: 96px;
+}
+
+/* Visibility helpers */
+.mobile-only {
+  display: none !important;
+}
+.desktop-only {
+  display: inline-flex !important;
+}
+
+/* ---------- Tablet ---------- */
+@media (max-width: 1024px) {
+  .app-grid {
+    grid-template-columns: 240px 1fr;
+  }
+  .control-pane {
+    display: none !important;
+  }
+  .input-wrap {
+    max-width: none;
+  }
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 768px) {
+  .app-grid {
+    grid-template-columns: 1fr;
+  }
+  .sidebar-pane {
+    display: none !important;
+  }
+  .control-pane {
+    display: none !important;
+  }
+  .mobile-only {
+    display: inline-flex !important;
+  }
+  .desktop-only {
+    display: none !important;
+  }
+  .message-content {
+    max-width: 88%;
+  }
+  .input-shell {
+    padding: 8px 12px 12px;
+  }
+}
