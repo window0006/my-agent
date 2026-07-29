@@ -37,11 +37,15 @@ export class ToolCallAccumulator {
     if (tcc.args !== undefined) cur.args += tcc.args;
     this.byIndex.set(idx, cur);
 
-    if (cur.id && cur.name !== undefined) {
+    // Complete when all three fields have been seen. `args` being non-empty
+    // is the signal that the LLM has started streaming the JSON; we still
+    // parse lazily at completion time, so a truncated stream just gets
+    // parsed as `{}` rather than dropped.
+    if (cur.id && cur.name !== undefined && cur.args) {
       const completed: CompletedToolCall = {
         id: cur.id,
         name: cur.name,
-        args: safeParseJson(cur.args || '{}') as Record<string, unknown>,
+        args: safeParseJson(cur.args) as Record<string, unknown>,
       };
       this.byIndex.delete(idx);
       return completed;
@@ -57,7 +61,7 @@ export class ToolCallAccumulator {
         out.push({
           id: tc.id,
           name: tc.name,
-          args: safeParseJson(tc.args || '{}') as Record<string, unknown>,
+          args: tc.args ? (safeParseJson(tc.args) as Record<string, unknown>) : {},
         });
       }
     }
@@ -195,6 +199,8 @@ export interface StreamChunk {
 export class StreamParser {
   private thinkParser = new ThinkTagParser();
   private toolAcc = new ToolCallAccumulator();
+  private completedToolCalls: CompletedToolCall[] = [];  // tracks what was emitted as events
+  private inProgressToolCalls: CompletedToolCall[] = []; // tracks truncated-by-stream-end
   private aiToolResults: ContentBlock[] = [];
   private toolMessages: FinalisedTurn['toolMessages'] = [];
   private chunkCount = 0;
@@ -213,10 +219,13 @@ export class StreamParser {
 
     const ctorName = chunk.constructor?.name;
     if (ctorName === 'AIMessageChunk' || ctorName === 'AIMessage') {
-      // Tool call chunks — accumulate, emit on completion.
+      // Tool call chunks — accumulate, emit on completion, remember for finalize.
       for (const tcc of chunk.tool_call_chunks ?? []) {
         const done = this.toolAcc.add(tcc);
-        if (done) yield { event: 'tool_call', data: { callId: done.id, name: done.name, args: done.args } };
+        if (done) {
+          this.completedToolCalls.push(done);
+          yield { event: 'tool_call', data: { callId: done.id, name: done.name, args: done.args } };
+        }
       }
       // Text deltas — split on <think> boundaries.
       if (typeof chunk.content === 'string' && chunk.content.length > 0) {
@@ -251,17 +260,20 @@ export class StreamParser {
       else this.textBuf += d.text;
     }
 
+    // Drain any in-progress tool calls whose args stream was cut off.
+    this.inProgressToolCalls = this.toolAcc.drainAll();
+
     // Compose the AI message content: text + reasoning + tool_call + tool_result
     const blocks: ContentBlock[] = this.thinkParser.toContentBlocks();
-    const completedToolCalls = this.toolAcc.drainAll();
-    for (const tc of completedToolCalls) {
+    const allToolCalls = [...this.completedToolCalls, ...this.inProgressToolCalls];
+    for (const tc of allToolCalls) {
       blocks.push({ type: 'tool_call', name: tc.name, args: tc.args, callId: tc.id } as ContentBlock);
     }
     for (const tr of this.aiToolResults) blocks.push(tr);
 
     const aiMessage = {
       content: blocks,
-      tool_calls: completedToolCalls.map((tc) => ({ id: tc.id, name: tc.name, args: tc.args })),
+      tool_calls: allToolCalls.map((tc) => ({ id: tc.id, name: tc.name, args: tc.args })),
     };
 
     return { aiMessage, toolMessages: this.toolMessages, chunkCount: this.chunkCount };
