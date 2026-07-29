@@ -12,6 +12,7 @@
  *     surface a meaningful error to the model.
  */
 import { spawn } from 'child_process';
+import { mkdirSync } from 'fs';
 import * as path from 'path';
 import { isAllowedCommand } from './whitelist';
 
@@ -19,6 +20,11 @@ const DEFAULT_TIMEOUT_MS = Number(process.env.SANDBOX_TIMEOUT_MS) || 30_000;
 const DEFAULT_WORKDIR = process.env.SANDBOX_WORKDIR
   ? path.resolve(process.env.SANDBOX_WORKDIR)
   : path.resolve(process.cwd(), 'sandbox-workdir');
+// Ensure the workdir exists before any spawn() runs. Node's child_process.spawn
+// returns ENOENT (not a working-directory error) when cwd doesn't exist, which
+// makes every command look like the binary is missing — confusing for both the
+// LLM caller and our debug logs. We mkdirSync once at module load.
+mkdirSync(DEFAULT_WORKDIR, { recursive: true });
 const MAX_OUTPUT_BYTES = 1024 * 1024; // 1MB per stream
 
 /**
