@@ -72,15 +72,28 @@ export class AgentRunner {
   /**
    * Run a single conversation turn with the given message history.
    * Messages can be either LangChain BaseMessage instances or plain
-   * `{ role, content }` objects — both are accepted by createAgent.invoke().
+   * `{ role, content }` objects.
+   *
+   * Implementation note: LangChain 1.5's `createAgent.invoke()` deadlocks on
+   * some chat models (the M3 model in particular — the agent loop never
+   * progresses past the first node). The workaround is to drive the agent
+   * via `stream({ streamMode: 'values' })` instead, which yields the full
+   * state after each node completes. The last yield is the final state —
+   * exactly what `invoke()` would have returned.
    */
   async run(
     messages: Array<BaseMessage | { role: string; content: string }>,
   ): Promise<AgentRunResult> {
     const agent = await this.ensureAgent();
-    // Cast: createAgent.invoke() returns a fully-parameterized state type
-    // that we don't want to expose through this facade.
-    return (await agent.invoke({ messages })) as AgentRunResult;
+    const iter = await agent.stream(
+      { messages } as Parameters<typeof agent.stream>[0],
+      { streamMode: 'values' } as Parameters<typeof agent.stream>[1],
+    );
+    let finalState: AgentRunResult = { messages: [] };
+    for await (const state of iter as AsyncIterable<AgentRunResult>) {
+      finalState = state as AgentRunResult;
+    }
+    return finalState;
   }
 
   /**
