@@ -8,6 +8,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { ContentBlock, Message, TokenUsage, ToolCall } from '@my-agent/shared';
 import { safeParseJson } from './json';
+import { parseThinkTags } from './content-block';
 
 /**
  * Convert a LangChain BaseMessage to a row ready for `messageDao.create()`.
@@ -78,9 +79,19 @@ function extractUsage(raw: unknown): TokenUsage | null {
 /**
  * Normalise LangChain content (string | ContentBlock[] | unknown) to our
  * ContentBlock[] shape. Called when constructing messages for persistence.
+ *
+ * M3's wire format: reasoning comes inline as `<think>...</think>` in the
+ * content string, not as a separate `reasoning_content` field. We split
+ * on those boundaries here so the persisted block array already has
+ * `reasoning` and `text` as separate blocks — the stream parser does the
+ * same thing statefully while chunks are arriving, and calls this same
+ * pure function at end-of-stream for the persisted shape.
  */
 export function normaliseContent(raw: unknown): ContentBlock[] {
-  if (typeof raw === 'string') return [{ type: 'text', text: raw }];
+  if (typeof raw === 'string') {
+    const blocks = parseThinkTags(raw);
+    return blocks.length > 0 ? blocks : [{ type: 'text', text: '' }];
+  }
   if (Array.isArray(raw)) {
     const out = raw.map(normaliseBlock).filter(Boolean) as ContentBlock[];
     return out.length > 0 ? out : [{ type: 'text', text: '' }];

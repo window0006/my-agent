@@ -6,7 +6,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 import { safeParseJson } from '../src/codec/json.ts';
-import { blocksToText, textToBlocks } from '../src/codec/content-block.ts';
+import { blocksToText, textToBlocks, parseThinkTags } from '../src/codec/content-block.ts';
 import {
   baseMessageToMessage,
   normaliseContent,
@@ -67,6 +67,58 @@ describe('blocksToText', () => {
 describe('textToBlocks', () => {
   test('wraps string in single text block', () => {
     assert.deepEqual(textToBlocks('hi'), [{ type: 'text', text: 'hi' }]);
+  });
+});
+
+describe('parseThinkTags — M3 inline reasoning format', () => {
+  test('no <think> tags → single text block', () => {
+    assert.deepEqual(parseThinkTags('hello world'), [
+      { type: 'text', text: 'hello world' },
+    ]);
+  });
+
+  test('plain <think>...</think> → text + reasoning + text', () => {
+    assert.deepEqual(parseThinkTags('before<think>inside</think>after'), [
+      { type: 'text', text: 'before' },
+      { type: 'reasoning', reasoning: 'inside' },
+      { type: 'text', text: 'after' },
+    ]);
+  });
+
+  test('only reasoning, no surrounding text', () => {
+    assert.deepEqual(parseThinkTags('<think>just thinking</think>'), [
+      { type: 'reasoning', reasoning: 'just thinking' },
+    ]);
+  });
+
+  test('multiple think blocks in one string', () => {
+    assert.deepEqual(parseThinkTags('a<think>one</think>b<think>two</think>c'), [
+      { type: 'text', text: 'a' },
+      { type: 'reasoning', reasoning: 'one' },
+      { type: 'text', text: 'b' },
+      { type: 'reasoning', reasoning: 'two' },
+      { type: 'text', text: 'c' },
+    ]);
+  });
+
+  test('unclosed <think> → rest treated as text (no data loss)', () => {
+    // The text before the unclosed tag is kept as-is; the unclosed tag
+    // itself + tail is also a text block (we don't drop data).
+    assert.deepEqual(parseThinkTags('hello<think>oops'), [
+      { type: 'text', text: 'hello' },
+      { type: 'text', text: '<think>oops' },
+    ]);
+  });
+
+  test('empty reasoning block is dropped', () => {
+    assert.deepEqual(parseThinkTags('before<think></think>after'), [
+      { type: 'text', text: 'before' },
+      { type: 'text', text: 'after' },
+    ]);
+  });
+
+  test('empty string → empty array (caller decides fallback)', () => {
+    assert.deepEqual(parseThinkTags(''), []);
   });
 });
 

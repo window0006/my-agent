@@ -12,6 +12,7 @@
 import { v4 as uuidv4 } from 'uuid';
 import type { ContentBlock } from '@my-agent/shared';
 import { safeParseJson } from '../../codec/json';
+import { parseThinkTags } from '../../codec/content-block';
 
 // ============================================================
 // ToolCallAccumulator
@@ -127,45 +128,11 @@ export class ThinkTagParser {
     return [{ kind: this.inThinking ? 'thinking' : 'text', text: tail }];
   }
 
-  /** Rebuild the persisted ContentBlock[] from the full stream mirror. */
+  /** Rebuild the persisted ContentBlock[] from the full stream mirror.
+   *  Delegates to the shared codec so streaming and non-streaming produce
+   *  the exact same shape (no duplicate parsing logic to drift). */
   toContentBlocks(): ContentBlock[] {
-    const out: ContentBlock[] = [];
-    let i = 0;
-    let inThinking = false;
-    let textBuf = '';
-    let thinkingBuf = '';
-
-    const flushText = () => { if (textBuf) { out.push({ type: 'text', text: textBuf }); textBuf = ''; } };
-    const flushThinking = () => { if (thinkingBuf) { out.push({ type: 'reasoning', reasoning: thinkingBuf }); thinkingBuf = ''; } };
-
-    while (i < this.fullText.length) {
-      if (inThinking) {
-        const close = this.fullText.indexOf(CLOSE_TAG, i);
-        if (close === -1) {
-          thinkingBuf += this.fullText.slice(i);
-          i = this.fullText.length;
-        } else {
-          thinkingBuf += this.fullText.slice(i, close);
-          flushThinking();
-          inThinking = false;
-          i = close + CLOSE_TAG.length;
-        }
-      } else {
-        const open = this.fullText.indexOf(OPEN_TAG, i);
-        if (open === -1) {
-          textBuf += this.fullText.slice(i);
-          i = this.fullText.length;
-        } else {
-          textBuf += this.fullText.slice(i, open);
-          flushText();
-          inThinking = true;
-          i = open + OPEN_TAG.length;
-        }
-      }
-    }
-    if (inThinking) flushThinking();
-    else flushText();
-    return out;
+    return parseThinkTags(this.fullText);
   }
 }
 
