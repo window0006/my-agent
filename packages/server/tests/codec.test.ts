@@ -351,6 +351,31 @@ describe('StreamParser', () => {
     assert.equal(f.toolMessages[0].tool_call_id, 'c1');
   });
 
+  test('ToolMessage with [ERROR] prefix → isError:true on SSE event and persisted block', () => {
+    const p = new StreamParser();
+    const events = [...p.feed(toolMsg('c1', 'shell', '[ERROR] exit code 1\nSTDOUT:\nSTDERR:\nbad'))];
+    const ev = events.find((e) => e.event === 'tool_result');
+    assert.equal((ev?.data as { isError: boolean }).isError, true);
+    const f = p.finalize();
+    const resultBlock = f.aiMessage.content.find((b) => b.type === 'tool_result');
+    assert.equal((resultBlock as { isError?: boolean }).isError, true);
+  });
+
+  test('ToolMessage with [sandbox] prefix → isError:true (whitelist rejection path)', () => {
+    const p = new StreamParser();
+    const events = [...p.feed(toolMsg('c1', 'run_shell', '[sandbox] Command "rm" is not in the whitelist'))];
+    assert.equal((events.find((e) => e.event === 'tool_result')?.data as { isError: boolean }).isError, true);
+  });
+
+  test('ToolMessage with plain success content → isError:false (default)', () => {
+    const p = new StreamParser();
+    const events = [...p.feed(toolMsg('c1', 'shell', 'hello world'))];
+    assert.equal((events.find((e) => e.event === 'tool_result')?.data as { isError: boolean }).isError, false);
+    const f = p.finalize();
+    const resultBlock = f.aiMessage.content.find((b) => b.type === 'tool_result');
+    assert.equal((resultBlock as { isError?: boolean }).isError, undefined);
+  });
+
   test('finalize reconstructs AI message with text + reasoning + tool_call + tool_result blocks', () => {
     const p = new StreamParser();
     [...p.feed(aiChunk('before<think>think</think>after'))];

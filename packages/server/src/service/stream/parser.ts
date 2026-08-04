@@ -208,13 +208,22 @@ export class StreamParser {
       }
     } else if (ctorName === 'ToolMessage') {
       const content = stringContent(chunk.content);
+      // Tool error is signalled by the sandbox via a `[ERROR]` (or `[sandbox]`)
+      // prefix in the result string — `formatShellResult` is the only producer.
+      // The sniff lives here at the SSE boundary so the entire downstream chain
+      // (UI, DB) can rely on a typed boolean instead of regex-ing prefixes.
+      const isError = content.startsWith('[ERROR]') || content.startsWith('[sandbox]');
       this.toolMessages.push({ tool_call_id: chunk.tool_call_id ?? '', name: chunk.name, content });
-      // Also surface as a block on the AI message so persisted history shows
-      // call + result together.
-      this.aiToolResults.push({ type: 'tool_result', toolCallId: chunk.tool_call_id ?? '', name: chunk.name, content });
+      this.aiToolResults.push({
+        type: 'tool_result',
+        toolCallId: chunk.tool_call_id ?? '',
+        name: chunk.name,
+        content,
+        ...(isError ? { isError: true } : {}),
+      });
       yield {
         event: 'tool_result',
-        data: { toolCallId: chunk.tool_call_id, name: chunk.name, content, isError: false },
+        data: { toolCallId: chunk.tool_call_id, name: chunk.name, content, isError },
       };
     }
   }
